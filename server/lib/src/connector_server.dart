@@ -40,8 +40,9 @@ class ConnectorServer {
     final messagesStream = utf8.decoder.bind(client).transform(LineSplitter());
     messagesStream.listen((message) async {
       if (message == ClientMessages.connectMe) {
-        await _processRunner.run('adb', ['tcpip', '5555']);
-        await _processRunner.run('adb', ['connect', client.address.address]);
+        final address = client.remoteAddress.address;
+        print('Connecting $address');
+        await _processRunner.run('adb', ['connect', address]);
       }
     });
   }
