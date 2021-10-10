@@ -7,10 +7,15 @@ class ConnectorClientListTileController extends StreamStore<Exception, _NoResult
   ConnectorClientListTileController(this.client) : super(_NoResult());
 
   Future<void> connect() async {
-    execute(() async {
+    setLoading(true);
+    try {
       await client.connectMe();
-      return _NoResult();
-    });
+      update(_NoResult());
+    } on Exception catch (e) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
   }
 }
 

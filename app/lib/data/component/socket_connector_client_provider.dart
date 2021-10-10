@@ -59,6 +59,15 @@ class _SocketConnectorClient implements ConnectorClient {
   }
 
   @override
+  Future<bool> isConnected() {
+    final completer = Completer<bool>();
+    _client.send(ClientMessages.amIConnected, onAnswer: (message) async {
+      completer.complete(message.data == ServerMessages.yes);
+    });
+    return completer.future;
+  }
+
+  @override
   String get hostname => _client.socket.address.host;
 
   @override

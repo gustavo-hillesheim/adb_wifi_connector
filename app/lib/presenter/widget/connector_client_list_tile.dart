@@ -22,41 +22,90 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
   @override
   Widget build(BuildContext context) {
     return TripleBuilder<ConnectorClientListTileController, Exception, Object>(
-        store: _controller,
-        builder: (context, triple) {
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black26, width: 1),
-              borderRadius: BorderRadius.circular(16),
-              color: triple.isLoading ? Colors.black12 : null,
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: triple.isLoading ? null : _controller.connect,
-              child: ListTile(
-                title: Text(widget.client.hostname,
-                    style: Theme.of(context).textTheme.caption),
-                subtitle: Text(widget.client.address),
-                trailing: triple.isLoading ? const _LoadingIndicator() : const SizedBox.shrink(),
+      store: _controller,
+      builder: (context, triple) {
+        print(triple.isLoading);
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black26, width: 1),
+            borderRadius: BorderRadius.circular(16),
+            color: triple.isLoading ? Colors.black12 : null,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: triple.isLoading ? null : _controller.connect,
+            child: ListTile(
+              title: Text(
+                widget.client.hostname,
+                style: Theme.of(context).textTheme.caption,
               ),
+              subtitle: Text(widget.client.address),
+              trailing: triple.isLoading
+                  ? const _ConnectingIndicator()
+                  : FutureBuilder<bool>(
+                      future: widget.client.isConnected(),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return LayoutBuilder(
+                            builder: (context, size) {
+                              return SizedBox.square(
+                                dimension: min(size.maxWidth, size.maxHeight),
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                          );
+                        }
+                        return _ConnectionStatus(isConnected: snapshot.data!);
+                      },
+                    ),
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }
 
-class _LoadingIndicator extends StatelessWidget {
-  const _LoadingIndicator({Key? key}) : super(key: key);
+class _ConnectingIndicator extends StatelessWidget {
+  const _ConnectingIndicator({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, layout) {
-      final smallestSide = min(layout.maxHeight, layout.maxWidth);
-      return SizedBox.square(
-        child: const Center(child: CircularProgressIndicator()),
-        dimension: smallestSide,
+    return Text(
+      'Connecting',
+      style: Theme.of(context).textTheme.caption!.copyWith(
+            color: Colors.grey,
+            fontWeight: FontWeight.normal,
+          ),
+    );
+  }
+}
+
+class _ConnectionStatus extends StatelessWidget {
+  final bool isConnected;
+
+  const _ConnectionStatus({required this.isConnected});
+
+  @override
+  Widget build(BuildContext context) {
+    if (isConnected) {
+      return Text(
+        'Connected',
+        style: Theme.of(context).textTheme.caption!.copyWith(
+              color: Colors.green,
+              fontWeight: FontWeight.normal,
+            ),
       );
-    });
+    }
+    return Text(
+      'Disconnected',
+      style: Theme.of(context).textTheme.caption!.copyWith(
+            color: Colors.red,
+            fontWeight: FontWeight.normal,
+          ),
+    );
   }
 }
