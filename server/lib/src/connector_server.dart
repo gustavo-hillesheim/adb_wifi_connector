@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:adb_wifi_connector_server/src/process_runner.dart';
+import './process_runner.dart';
+import 'package:adb_wifi_connector_commons/messages.dart';
+import 'package:adb_wifi_connector_commons/socket_client.dart';
 
 import './exceptions.dart';
-import './messages.dart';
 
 class ConnectorServer {
   final ProcessRunner _processRunner;
@@ -33,17 +34,16 @@ class ConnectorServer {
     _isStarted = true;
   }
 
-  void _handleClient(Socket client) async {
-    client.writeln(ServerMessages.hello);
-    await client.flush();
+  void _handleClient(Socket socket) async {
+    print('Client ${socket.remoteAddress.address} connected');
+    final client = SocketClient(socket);
+    await client.send(ServerMessages.hello);
 
-    final messagesStream = utf8.decoder.bind(client).transform(LineSplitter());
-    messagesStream.listen((message) async {
-      if (message == ClientMessages.connectMe) {
-        final address = client.remoteAddress.address;
-        print('Connecting $address');
-        await _processRunner.run('adb', ['connect', address]);
-      }
+    client.on(ClientMessages.connectMe, (message) async {
+      final address = client.socket.remoteAddress.address;
+      print('Connecting $address');
+      await _processRunner.run('adb', ['connect', address]);
+      client.answer(message, ServerMessages.connected);
     });
   }
 }

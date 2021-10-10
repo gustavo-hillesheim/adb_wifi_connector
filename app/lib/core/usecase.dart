@@ -1,4 +1,4 @@
-import 'package:app/core/app_either_adapter.dart';
+import './app_either_adapter.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class UseCase<Input, Output> {

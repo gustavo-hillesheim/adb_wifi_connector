@@ -1,7 +1,7 @@
-import 'package:app/data/component/socket_connector_client_provider.dart';
-import 'package:app/domain/usecase/find_servers_usecase.dart';
-import 'package:app/presenter/controller/servers_list_controller.dart';
-import 'package:app/presenter/screen/servers_list_page.dart';
+import './data/component/socket_connector_client_provider.dart';
+import './domain/usecase/find_servers_usecase.dart';
+import './presenter/controller/servers_list_controller.dart';
+import './presenter/screen/servers_list_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {

@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:adb_wifi_connector_server/src/connector_server.dart';
 import 'package:adb_wifi_connector_server/src/exceptions.dart';
-import 'package:adb_wifi_connector_server/src/messages.dart';
+import 'package:adb_wifi_connector_commons/messages.dart';
 import 'package:adb_wifi_connector_server/src/process_runner.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:test/expect.dart';

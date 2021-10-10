@@ -1,7 +1,7 @@
-import 'package:app/core/usecase.dart';
-import 'package:app/domain/component/connector_client_provider.dart';
-import 'package:app/domain/model/connector_client.dart';
-import 'package:fpdart/src/either.dart';
+import '../../core/usecase.dart';
+import '../../domain/component/connector_client_provider.dart';
+import '../../domain/model/connector_client.dart';
+import 'package:fpdart/fpdart.dart';
 
 class FindServersUsecase extends UseCase<NoParams, List<ConnectorClient>> {
   final ConnectorClientProvider provider;

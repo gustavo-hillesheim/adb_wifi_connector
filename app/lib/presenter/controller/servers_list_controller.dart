@@ -1,6 +1,6 @@
-import 'package:app/core/usecase.dart';
-import 'package:app/domain/model/connector_client.dart';
-import 'package:app/domain/usecase/find_servers_usecase.dart';
+import '../../core/usecase.dart';
+import '../../domain/model/connector_client.dart';
+import '../../domain/usecase/find_servers_usecase.dart';
 import 'package:flutter_triple/flutter_triple.dart';
 
 class ServersListController extends StreamStore<Exception, List<ConnectorClient>> {

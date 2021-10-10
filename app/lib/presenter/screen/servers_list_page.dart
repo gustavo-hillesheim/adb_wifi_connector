@@ -1,5 +1,7 @@
-import 'package:app/domain/model/connector_client.dart';
-import 'package:app/presenter/controller/servers_list_controller.dart';
+import 'package:adb_wifi_connector_app/presenter/widget/connector_client_list_tile.dart';
+
+import '../../domain/model/connector_client.dart';
+import '../controller/servers_list_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_triple/flutter_triple.dart';
 
@@ -85,23 +87,7 @@ class _ServersListPageState extends State<ServersListPage> {
                       onRefresh: widget.controller.findServers,
                       child: ListView.builder(
                         itemCount: clients.length,
-                        itemBuilder: (context, i) {
-                          final client = clients.elementAt(i);
-                          return Container(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            decoration: BoxDecoration(
-                              border:
-                                  Border.all(color: Colors.black26, width: 1),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: ListTile(
-                              title: Text(client.hostname,
-                                  style: Theme.of(context).textTheme.caption),
-                              subtitle: Text(client.address),
-                            ),
-                          );
-                        },
+                        itemBuilder: (context, i) => ConnectorClientListTile(client: clients.elementAt(i)),
                       ),
                     );
                   }

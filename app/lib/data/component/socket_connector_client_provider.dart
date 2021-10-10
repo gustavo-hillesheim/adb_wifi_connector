@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:fpdart/src/either.dart';
+import 'package:adb_wifi_connector_commons/messages.dart';
+import 'package:adb_wifi_connector_commons/socket_client.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
 import '../../domain/component/connector_client_provider.dart';
@@ -16,8 +19,8 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
     }
     final subnet = ip.substring(0, ip.lastIndexOf('.'));
     final clients = (await _findServers(subnet))
-          .map((socket) => _SocketConnectorClient(socket))
-          .toList();
+        .map((socket) => _SocketConnectorClient(SocketClient(socket)))
+        .toList();
     return Either.right(clients);
   }
 
@@ -26,9 +29,10 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
     final servers = <Socket>[];
     for (var i = 1; i < 256; i++) {
       final ip = '$subnet.$i';
-      final connectionFuture = Socket.connect(ip, 14289, timeout: const Duration(seconds: 1))
-          .then((value) => servers.add(value))
-          .catchError((_) {});
+      final connectionFuture =
+          Socket.connect(ip, 14289, timeout: const Duration(seconds: 1))
+              .then((value) => servers.add(value))
+              .catchError((_) {});
       connectionFutures.add(connectionFuture);
     }
     await Future.wait(connectionFutures);
@@ -37,19 +41,26 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
 }
 
 class _SocketConnectorClient implements ConnectorClient {
-  final Socket _socket;
+  final SocketClient _client;
 
-  _SocketConnectorClient(this._socket);
+  _SocketConnectorClient(this._client);
 
   @override
   Future<void> connectMe() async {
-    _socket.writeln('Connect me');
-    await _socket.flush();
+    final completer = Completer<void>();
+    _client.send(ClientMessages.connectMe, onAnswer: (message) async {
+      if (message.data == ServerMessages.connected) {
+        completer.complete();
+      } else {
+        completer.completeError(Exception('Unknown error'));
+      }
+    });
+    return completer.future;
   }
 
   @override
-  String get hostname => _socket.address.host;
+  String get hostname => _client.socket.address.host;
 
   @override
-  String get address => _socket.address.address;
+  String get address => _client.socket.address.address;
 }

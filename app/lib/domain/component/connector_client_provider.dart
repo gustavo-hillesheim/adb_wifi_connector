@@ -1,4 +1,4 @@
-import 'package:app/domain/model/connector_client.dart';
+import '../../domain/model/connector_client.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract class ConnectorClientProvider {
