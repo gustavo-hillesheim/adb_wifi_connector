@@ -1,7 +1,7 @@
 import './data/component/socket_connector_client_provider.dart';
 import './domain/usecase/find_servers_usecase.dart';
-import './presenter/controller/servers_list_controller.dart';
-import './presenter/screen/servers_list_page.dart';
+import 'presenter/screen/servers_list_page/servers_list_page_controller.dart';
+import 'presenter/screen/servers_list_page/servers_list_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: ServersListPage(
-        ServersListController(
+        ServersListPageController(
             FindServersUsecase(SocketConnectorClientProvider())),
       ),
     );

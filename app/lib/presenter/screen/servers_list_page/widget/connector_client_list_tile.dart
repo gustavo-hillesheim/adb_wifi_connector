@@ -1,6 +1,6 @@
-import 'package:adb_wifi_connector_app/domain/model/connector_client.dart';
-import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
-import 'package:adb_wifi_connector_app/presenter/widget/connector_client_list_tile_controller.dart';
+import '../../../../domain/model/connector_client.dart';
+import '../../../../domain/model/enum/connection_status.dart';
+import 'connector_client_list_tile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_triple/flutter_triple.dart';
 
@@ -25,11 +25,10 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
       store: _controller,
       builder: (context, triple) {
         final onTapChangeStatus = triple.isLoading
-
             ? null
             : (triple.state == ConnectionStatus.connected
-            ? _controller.disconnect
-            : _controller.connect);
+                ? _controller.disconnect
+                : _controller.connect);
         return Material(
           color: Colors.white,
           child: Stack(
@@ -37,13 +36,19 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
               InkWell(
                 focusColor: Colors.white,
                 onTap: onTapChangeStatus,
-                child: ListTile(
-                  title: Text(
-                    widget.client.hostname,
-                    style: Theme.of(context).textTheme.caption,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ListTile(
+                    title: Text(
+                      widget.client.hostname,
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                    subtitle: Text(widget.client.address),
+                    trailing: _ConnectionStatus(
+                      status: triple.state,
+                      onTapChange: onTapChangeStatus,
+                    ),
                   ),
-                  subtitle: Text(widget.client.address),
-                  trailing: _ConnectionStatus(status: triple.state, onTapChange: onTapChangeStatus,),
                 ),
               ),
               if (triple.isLoading)
