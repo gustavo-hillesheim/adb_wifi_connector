@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
 import 'package:adb_wifi_connector_commons/messages.dart';
 import 'package:adb_wifi_connector_commons/socket_client.dart';
 import 'package:fpdart/fpdart.dart';
@@ -9,6 +8,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 
 import '../../domain/component/connector_client_provider.dart';
 import '../../domain/model/connector_client.dart';
+import '../../domain/model/enum/connection_status.dart';
 
 class SocketConnectorClientProvider implements ConnectorClientProvider {
   @override
@@ -75,7 +75,8 @@ class _SocketConnectorClient implements ConnectorClient {
   @override
   Future<ConnectionStatus> getStatus() async {
     final completer = Completer<ConnectionStatus>();
-    await _client.send(ClientMessages.whatIsMyStatus, onAnswer: (message) async {
+    await _client.send(ClientMessages.whatIsMyStatus,
+        onAnswer: (message) async {
       completer.complete(connectionStatusFromString(message.data));
     });
     return completer.future;
