@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:adb_wifi_connector_app/domain/model/connector_client.dart';
 import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
 import 'package:adb_wifi_connector_app/presenter/widget/connector_client_list_tile_controller.dart';
@@ -22,50 +20,44 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
 
   @override
   Widget build(BuildContext context) {
-    return TripleBuilder<ConnectorClientListTileController, Exception, Object>(
+    return TripleBuilder<ConnectorClientListTileController, Exception,
+        ConnectionStatus>(
       store: _controller,
       builder: (context, triple) {
+        final onTapChangeStatus = triple.isLoading
+            ? null
+            : (triple.state == ConnectionStatus.connected
+            ? _controller.disconnect
+            : _controller.connect);
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           decoration: BoxDecoration(
             border: Border.all(color: Colors.black26, width: 1),
             borderRadius: BorderRadius.circular(16),
-            color: triple.isLoading ? Colors.black12 : null,
           ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: triple.isLoading ? null : _controller.connect,
-            child: ListTile(
-              title: Text(
-                widget.client.hostname,
-                style: Theme.of(context).textTheme.caption,
+          child: Stack(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: onTapChangeStatus,
+                child: ListTile(
+                  title: Text(
+                    widget.client.hostname,
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                  subtitle: Text(widget.client.address),
+                  trailing: _ConnectionStatus(status: triple.state, onTapChange: onTapChangeStatus,),
+                ),
               ),
-              subtitle: Text(widget.client.address),
-              trailing: triple.isLoading
-                  ? const _ConnectingIndicator()
-                  : FutureBuilder<ConnectionStatus>(
-                      future: widget.client.getStatus(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) {
-                          return LayoutBuilder(
-                            builder: (context, size) {
-                              return SizedBox.square(
-                                dimension: min(size.maxWidth, size.maxHeight),
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                        return _ConnectionStatus(
-                          status: snapshot.data!,
-                          onTapConnect: _controller.connect,
-                          onTapDisconnect: _controller.disconnect,
-                        );
-                      },
-                    ),
-            ),
+              if (triple.isLoading)
+                const Positioned(
+                  child: _ConnectingOverlay(),
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                ),
+            ],
           ),
         );
       },
@@ -73,30 +65,32 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
   }
 }
 
-class _ConnectingIndicator extends StatelessWidget {
-  const _ConnectingIndicator({Key? key}) : super(key: key);
+class _ConnectingOverlay extends StatelessWidget {
+  const _ConnectingOverlay({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      'Connecting',
-      style: Theme.of(context).textTheme.caption!.copyWith(
-            color: Colors.grey,
-            fontWeight: FontWeight.normal,
-          ),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
 
 class _ConnectionStatus extends StatelessWidget {
   final ConnectionStatus status;
-  final VoidCallback onTapConnect;
-  final VoidCallback onTapDisconnect;
+  final VoidCallback? onTapChange;
 
   const _ConnectionStatus({
     required this.status,
-    required this.onTapConnect,
-    required this.onTapDisconnect,
+    required this.onTapChange,
   });
 
   @override
@@ -105,10 +99,8 @@ class _ConnectionStatus extends StatelessWidget {
     return Switch(
       value: isConnected,
       onChanged: (_) {
-        if (isConnected) {
-          onTapDisconnect();
-        } else {
-          onTapConnect();
+        if (onTapChange != null) {
+          onTapChange!();
         }
       },
     );

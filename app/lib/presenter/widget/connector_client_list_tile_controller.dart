@@ -1,17 +1,24 @@
 import 'package:adb_wifi_connector_app/domain/model/connector_client.dart';
+import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
 import 'package:flutter_triple/flutter_triple.dart';
 
 class ConnectorClientListTileController
-    extends StreamStore<Exception, _NoResult> {
+    extends StreamStore<Exception, ConnectionStatus> {
   final ConnectorClient client;
 
-  ConnectorClientListTileController(this.client) : super(_NoResult());
+  ConnectorClientListTileController(this.client) : super(ConnectionStatus.disconnecting) {
+    setLoading(true);
+    client.getStatus().then((v) {
+      update(v);
+      setLoading(false);
+    });
+  }
 
-  Future<void> connect() async {
+  void connect() async {
     setLoading(true);
     try {
       await client.connect();
-      update(_NoResult());
+      await client.getStatus().then(update);
     } on Exception catch (e) {
       setError(e);
     } finally {
@@ -19,11 +26,11 @@ class ConnectorClientListTileController
     }
   }
 
-  Future<void> disconnect() async {
+  void disconnect() async {
     setLoading(true);
     try {
       await client.disconnect();
-      update(_NoResult());
+      await client.getStatus().then(update);
     } on Exception catch (e) {
       setError(e);
     } finally {
@@ -31,5 +38,3 @@ class ConnectorClientListTileController
     }
   }
 }
-
-class _NoResult {}

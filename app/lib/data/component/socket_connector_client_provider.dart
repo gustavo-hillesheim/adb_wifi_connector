@@ -49,7 +49,7 @@ class _SocketConnectorClient implements ConnectorClient {
   @override
   Future<void> connect() async {
     final completer = Completer<void>();
-    _client.send(ClientMessages.connectMe, onAnswer: (message) async {
+    await _client.send(ClientMessages.connectMe, onAnswer: (message) async {
       if (message.data == ServerMessages.connected) {
         completer.complete();
       } else {
@@ -62,7 +62,7 @@ class _SocketConnectorClient implements ConnectorClient {
   @override
   Future<void> disconnect() async {
     final completer = Completer<void>();
-    _client.send(ClientMessages.disconnectMe, onAnswer: (message) async {
+    await _client.send(ClientMessages.disconnectMe, onAnswer: (message) async {
       if (message.data == ServerMessages.disconnected) {
         completer.complete();
       } else {
@@ -73,9 +73,9 @@ class _SocketConnectorClient implements ConnectorClient {
   }
 
   @override
-  Future<ConnectionStatus> getStatus() {
+  Future<ConnectionStatus> getStatus() async {
     final completer = Completer<ConnectionStatus>();
-    _client.send(ClientMessages.whatIsMyStatus, onAnswer: (message) async {
+    await _client.send(ClientMessages.whatIsMyStatus, onAnswer: (message) async {
       completer.complete(connectionStatusFromString(message.data));
     });
     return completer.future;

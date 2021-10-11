@@ -1,11 +1,11 @@
-enum ConnectionStatus { connected, disconnected }
+enum ConnectionStatus { connected, disconnected, connecting, disconnecting }
 
 ConnectionStatus connectionStatusFromString(String status) {
-  if (status.toLowerCase() == 'connected') {
-    return ConnectionStatus.connected;
+  switch (status.toLowerCase()) {
+    case 'connected': return ConnectionStatus.connected;
+    case 'disconnected': return ConnectionStatus.disconnected;
+    case 'connecting': return ConnectionStatus.connecting;
+    case 'disconnecting': return ConnectionStatus.disconnecting;
+    default: throw Exception('Unknown connection status "$status"');
   }
-  if (status.toLowerCase() == 'disconnected') {
-    return ConnectionStatus.disconnected;
-  }
-  throw Exception('Unkown connection status "$status"');
 }
