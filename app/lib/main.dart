@@ -17,6 +17,8 @@ class MyApp extends StatelessWidget {
       title: 'ADB Wifi Connector',
       theme: ThemeData(
         primarySwatch: Colors.lightBlue,
+        scaffoldBackgroundColor: Colors.lightBlue,
+        backgroundColor: Colors.lightBlue,
         textTheme: const TextTheme(
           headline1: TextStyle(fontWeight: FontWeight.bold, fontSize: 54),
           headline2: TextStyle(fontWeight: FontWeight.bold, fontSize: 46),

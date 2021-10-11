@@ -25,20 +25,17 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
       store: _controller,
       builder: (context, triple) {
         final onTapChangeStatus = triple.isLoading
+
             ? null
             : (triple.state == ConnectionStatus.connected
             ? _controller.disconnect
             : _controller.connect);
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black26, width: 1),
-            borderRadius: BorderRadius.circular(16),
-          ),
+        return Material(
+          color: Colors.white,
           child: Stack(
             children: [
               InkWell(
-                borderRadius: BorderRadius.circular(16),
+                focusColor: Colors.white,
                 onTap: onTapChangeStatus,
                 child: ListTile(
                   title: Text(
@@ -73,10 +70,7 @@ class _ConnectingOverlay extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black26,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      color: Colors.black26,
       child: const Center(
         child: CircularProgressIndicator(),
       ),
