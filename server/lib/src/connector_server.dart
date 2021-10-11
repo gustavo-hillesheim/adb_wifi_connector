@@ -45,14 +45,20 @@ class ConnectorServer {
       client.answer(message, ServerMessages.connected);
     });
 
-    client.on(ClientMessages.amIConnected, (message) async {
+    client.on(ClientMessages.disconnectMe, (message) async {
+      final address = client.socket.remoteAddress.address;
+      await _processRunner.run('adb', ['disconnect', address]);
+      client.answer(message, ServerMessages.disconnected);
+    });
+
+    client.on(ClientMessages.whatIsMyStatus, (message) async {
       final address = client.socket.remoteAddress.address;
       final result = await _processRunner.run('adb', ['devices']);
       final output = result.stdout as String;
-      if (output.contains('$address:5555')) {
-        client.answer(message, ServerMessages.yes);
+      if (output.contains(address)) {
+        client.answer(message, ServerMessages.connected);
       } else {
-        client.answer(message, ServerMessages.no);
+        client.answer(message, ServerMessages.disconnected);
       }
     });
   }

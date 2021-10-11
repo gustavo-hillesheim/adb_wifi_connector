@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
 import 'package:adb_wifi_connector_commons/messages.dart';
 import 'package:adb_wifi_connector_commons/socket_client.dart';
 import 'package:fpdart/fpdart.dart';
@@ -46,7 +47,7 @@ class _SocketConnectorClient implements ConnectorClient {
   _SocketConnectorClient(this._client);
 
   @override
-  Future<void> connectMe() async {
+  Future<void> connect() async {
     final completer = Completer<void>();
     _client.send(ClientMessages.connectMe, onAnswer: (message) async {
       if (message.data == ServerMessages.connected) {
@@ -59,10 +60,23 @@ class _SocketConnectorClient implements ConnectorClient {
   }
 
   @override
-  Future<bool> isConnected() {
-    final completer = Completer<bool>();
-    _client.send(ClientMessages.amIConnected, onAnswer: (message) async {
-      completer.complete(message.data == ServerMessages.yes);
+  Future<void> disconnect() async {
+    final completer = Completer<void>();
+    _client.send(ClientMessages.disconnectMe, onAnswer: (message) async {
+      if (message.data == ServerMessages.disconnected) {
+        completer.complete();
+      } else {
+        completer.completeError(Exception('Unknown error'));
+      }
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<ConnectionStatus> getStatus() {
+    final completer = Completer<ConnectionStatus>();
+    _client.send(ClientMessages.whatIsMyStatus, onAnswer: (message) async {
+      completer.complete(connectionStatusFromString(message.data));
     });
     return completer.future;
   }

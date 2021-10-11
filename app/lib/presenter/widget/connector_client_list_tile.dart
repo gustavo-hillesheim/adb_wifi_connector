@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:adb_wifi_connector_app/domain/model/connector_client.dart';
+import 'package:adb_wifi_connector_app/domain/model/enum/connection_status.dart';
 import 'package:adb_wifi_connector_app/presenter/widget/connector_client_list_tile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_triple/flutter_triple.dart';
@@ -24,7 +25,6 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
     return TripleBuilder<ConnectorClientListTileController, Exception, Object>(
       store: _controller,
       builder: (context, triple) {
-        print(triple.isLoading);
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
           decoration: BoxDecoration(
@@ -43,8 +43,8 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
               subtitle: Text(widget.client.address),
               trailing: triple.isLoading
                   ? const _ConnectingIndicator()
-                  : FutureBuilder<bool>(
-                      future: widget.client.isConnected(),
+                  : FutureBuilder<ConnectionStatus>(
+                      future: widget.client.getStatus(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
                           return LayoutBuilder(
@@ -58,7 +58,11 @@ class _ConnectorClientListTileState extends State<ConnectorClientListTile> {
                             },
                           );
                         }
-                        return _ConnectionStatus(isConnected: snapshot.data!);
+                        return _ConnectionStatus(
+                          status: snapshot.data!,
+                          onTapConnect: _controller.connect,
+                          onTapDisconnect: _controller.disconnect,
+                        );
                       },
                     ),
             ),
@@ -85,27 +89,28 @@ class _ConnectingIndicator extends StatelessWidget {
 }
 
 class _ConnectionStatus extends StatelessWidget {
-  final bool isConnected;
+  final ConnectionStatus status;
+  final VoidCallback onTapConnect;
+  final VoidCallback onTapDisconnect;
 
-  const _ConnectionStatus({required this.isConnected});
+  const _ConnectionStatus({
+    required this.status,
+    required this.onTapConnect,
+    required this.onTapDisconnect,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (isConnected) {
-      return Text(
-        'Connected',
-        style: Theme.of(context).textTheme.caption!.copyWith(
-              color: Colors.green,
-              fontWeight: FontWeight.normal,
-            ),
-      );
-    }
-    return Text(
-      'Disconnected',
-      style: Theme.of(context).textTheme.caption!.copyWith(
-            color: Colors.red,
-            fontWeight: FontWeight.normal,
-          ),
+    final isConnected = status == ConnectionStatus.connected;
+    return Switch(
+      value: isConnected,
+      onChanged: (_) {
+        if (isConnected) {
+          onTapDisconnect();
+        } else {
+          onTapConnect();
+        }
+      },
     );
   }
 }
