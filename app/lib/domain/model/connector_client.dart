@@ -7,4 +7,5 @@ abstract class ConnectorClient {
   Future<void> connect();
   Future<void> disconnect();
   Future<ConnectionStatus> getStatus();
+  void destroy();
 }

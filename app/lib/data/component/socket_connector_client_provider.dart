@@ -20,19 +20,31 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
     }
     final subnet = ip.substring(0, ip.lastIndexOf('.'));
     final clients = (await _findServers(subnet))
-        .map((socket) => _SocketConnectorClient(SocketClient(socket)))
+        .map((socketClient) => _SocketConnectorClient(socketClient))
         .toList();
     return Either.right(clients);
   }
 
-  Future<List<Socket>> _findServers(String subnet) async {
+  Future<List<SocketClient>> _findServers(String subnet) async {
     final connectionFutures = <Future>[];
-    final servers = <Socket>[];
+    final servers = <SocketClient>[];
     for (var i = 1; i < 256; i++) {
       final ip = '$subnet.$i';
       final connectionFuture =
           Socket.connect(ip, 14289, timeout: const Duration(seconds: 1))
-              .then((value) => servers.add(value))
+              .then((socket) async {
+                final client = SocketClient(socket);
+                final message = await client
+                    .getNextMessage(const Duration(milliseconds: 250));
+                print('first message ${message.data}');
+                if (message.data == ServerMessages.hello) {
+                  return client;
+                } else {
+                  client.destroy();
+                  return null;
+                }
+              })
+              .then((value) => value != null ? servers.add(value) : null)
               .catchError((_) {});
       connectionFutures.add(connectionFuture);
     }
@@ -80,6 +92,10 @@ class _SocketConnectorClient implements ConnectorClient {
       completer.complete(connectionStatusFromString(message.data));
     });
     return completer.future;
+  }
+
+  void destroy() {
+    _client.destroy();
   }
 
   @override

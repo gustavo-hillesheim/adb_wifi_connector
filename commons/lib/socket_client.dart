@@ -7,30 +7,56 @@ typedef Unsubscriber = void Function();
 
 class SocketClient {
   final Socket socket;
-  final _listeners = <String, Listener?>{};
+  final _messageListeners = <String, Listener?>{};
   final _idsListeners = <String, Listener?>{};
+  final _listeners = <Listener>[];
+  final _destroyListeners = <void Function()>[];
   int _idSequence = 1;
 
   SocketClient(this.socket) {
     _listenToMessages();
   }
 
-  void _listenToMessages() {
-    utf8.decoder.bind(socket).transform(LineSplitter()).listen((messageStr) {
-      print('Received message "$messageStr"');
-      final message = Message.fromString(messageStr);
-      if (_listeners.containsKey(message.data)) {
-        _listeners[message.data]!(message);
-      }
-      if (_idsListeners.containsKey(message.id)) {
-        _idsListeners[message.id]!(message);
+  void destroy() {
+    socket.close();
+    socket.destroy();
+    _listeners.clear();
+    _messageListeners.clear();
+    _idsListeners.clear();
+    _destroyListeners.clear();
+  }
+
+  Unsubscriber onDestroy(void Function() listener) {
+    _destroyListeners.add(listener);
+    return () => _destroyListeners.remove(listener);
+  }
+
+  Unsubscriber onReceiveMessage(Listener listener) {
+    _listeners.add(listener);
+    return () => _listeners.remove(listener);
+  }
+
+  Future<Message> getNextMessage(Duration timeout) {
+    final completer = Completer<Message>();
+    late Timer timer;
+    late Unsubscriber unsubscriber;
+    unsubscriber = onReceiveMessage((message) {
+      completer.complete(message);
+      unsubscriber();
+      timer.cancel();
+    });
+    timer = Timer(timeout, () {
+      if (!completer.isCompleted) {
+        unsubscriber();
+        completer.completeError(Exception('Reached timeout'));
       }
     });
+    return completer.future;
   }
 
   Unsubscriber on(String message, Listener listener) {
-    _listeners[message] = listener;
-    return () => _listeners.remove(message);
+    _messageListeners[message] = listener;
+    return () => _messageListeners.remove(message);
   }
 
   Unsubscriber onAnswer(String id, Listener listener, {bool once = false}) {
@@ -60,6 +86,28 @@ class SocketClient {
     if (onAnswer != null) {
       this.onAnswer(message.id, onAnswer, once: true);
     }
+  }
+
+  void _listenToMessages() {
+    utf8.decoder.bind(socket).transform(LineSplitter()).listen((messageStr) {
+      print('Received message "$messageStr"');
+      final message = Message.fromString(messageStr);
+      if (_messageListeners.containsKey(message.data)) {
+        _messageListeners[message.data]!(message);
+      }
+      if (_idsListeners.containsKey(message.id)) {
+        _idsListeners[message.id]!(message);
+      }
+      final listenersCopy = [..._listeners];
+      for (final listener in listenersCopy) {
+        listener(message);
+      }
+    }, onDone: () {
+      final destroyListenersCopy = [..._destroyListeners];
+      for (final listener in destroyListenersCopy) {
+        listener();
+      }
+    });
   }
 
   Future<void> _send(Message message) async {
