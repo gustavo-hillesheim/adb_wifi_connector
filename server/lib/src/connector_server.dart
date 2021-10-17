@@ -38,6 +38,10 @@ class ConnectorServer {
     final client = SocketClient(socket);
     await client.send(ServerMessages.hello);
 
+    client.onDestroy(() {
+      print('Client ${socket.remoteAddress.address} has disconnected');
+    });
+
     client.on(ClientMessages.connectMe, (message) async {
       final address = client.socket.remoteAddress.address;
       await _processRunner.run('adb', ['connect', address]);
