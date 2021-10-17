@@ -1,18 +1,24 @@
-# app
+An app used to connect an Android phone to ADB via Wifi.
 
-A new Flutter project.
+# Showcase
+![ADB Wifi Connector App Showcase](../docs/showcase.gif)
 
-## Getting Started
+# How it works
+The app connects to servers listening at port 14289 in the current subnet, then verifies if they are ADB Wifi Connector Servers, if so, lists the servers and let the user connect or disconnect to ADB in the hosts.
 
-This project is a starting point for a Flutter application.
+# Key Flutter features used
+- Stateless and Stateful widgets
+- Custom themes for color and text
+- Pull to refresh list
+- Flutter Version Management (FVM)
+- State management with [Flutter Triple](https://pub.dev/packages/flutter_triple)
+- Functional programming style returns with [FP Dart](https://pub.dev/packages/fpdart)
+- Launcher icons with [Flutter Launcher Icons](https://pub.dev/packages/flutter_launcher_icons)
 
-A few resources to get you started if this is your first Flutter project:
+# Architecture
+The app is architectured following Clean Architecture principles. It is separated into the following layers:
+- Domain: contains the base models, component interfaces and usecases;
+- Data: implements the component interfaces;
+- Presenter: Implements the UI.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-<div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+There is also the Core "layer", that implements general use classes.
