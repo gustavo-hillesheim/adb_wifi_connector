@@ -8,4 +8,5 @@ abstract class ClientMessages {
   static const connectMe = 'Connect me';
   static const disconnectMe = 'Disconnect me';
   static const whatIsMyStatus = 'What is my status';
+  static const whatIsYourName = 'What is your name';
 }

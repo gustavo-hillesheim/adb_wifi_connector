@@ -64,5 +64,10 @@ class ConnectorServer {
         client.answer(message, ServerMessages.disconnected);
       }
     });
+
+    client.on(ClientMessages.whatIsYourName, (message) async {
+      final name = Platform.localHostname;
+      client.answer(message, name);
+    });
   }
 }

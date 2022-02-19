@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:adb_wifi_connector_commons/messages.dart';
 import 'package:adb_wifi_connector_commons/socket_client.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
@@ -15,14 +16,29 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
   Future<Either<Exception, List<ConnectorClient>>> findServers() async {
     final info = NetworkInfo();
     final ip = await info.getWifiIP();
+    debugPrint('Host IP: $ip');
     if (ip == null) {
       return Either.left(Exception('Could not get IP'));
     }
     final subnet = ip.substring(0, ip.lastIndexOf('.'));
-    final clients = (await _findServers(subnet))
-        .map((socketClient) => _SocketConnectorClient(socketClient))
-        .toList();
+    final servers = await _findServers(subnet);
+    final clients = await Future.wait(servers.map(_createConnectorClient));
     return Either.right(clients);
+  }
+
+  Future<ConnectorClient> _createConnectorClient(
+      SocketClient socketClient) async {
+    final hostname = await _getName(socketClient);
+    return _SocketConnectorClient(hostname, socketClient);
+  }
+
+  Future<String> _getName(SocketClient server) {
+    final completer = Completer<String>();
+    server.send(ClientMessages.whatIsYourName, onAnswer: (message) {
+      final data = message.data;
+      completer.complete(data);
+    });
+    return completer.future;
   }
 
   Future<List<SocketClient>> _findServers(String subnet) async {
@@ -31,12 +47,12 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
     for (var i = 1; i < 256; i++) {
       final ip = '$subnet.$i';
       final connectionFuture =
-          Socket.connect(ip, 14289, timeout: const Duration(seconds: 1))
+          Socket.connect(ip, 14289, timeout: const Duration(seconds: 10))
               .then((socket) async {
                 final client = SocketClient(socket);
                 final message = await client
                     .getNextMessage(const Duration(milliseconds: 250));
-                print('first message ${message.data}');
+                debugPrint('first message ${message.data}');
                 if (message.data == ServerMessages.hello) {
                   return client;
                 } else {
@@ -45,7 +61,9 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
                 }
               })
               .then((value) => value != null ? servers.add(value) : null)
-              .catchError((_) {});
+              .catchError((e) {
+                debugPrint('Error while connecting to $ip: $e');
+              });
       connectionFutures.add(connectionFuture);
     }
     await Future.wait(connectionFutures);
@@ -54,9 +72,11 @@ class SocketConnectorClientProvider implements ConnectorClientProvider {
 }
 
 class _SocketConnectorClient implements ConnectorClient {
+  @override
+  final String hostname;
   final SocketClient _client;
 
-  _SocketConnectorClient(this._client);
+  _SocketConnectorClient(this.hostname, this._client);
 
   @override
   Future<void> connect() async {
@@ -94,12 +114,10 @@ class _SocketConnectorClient implements ConnectorClient {
     return completer.future;
   }
 
+  @override
   void destroy() {
     _client.destroy();
   }
-
-  @override
-  String get hostname => _client.socket.address.host;
 
   @override
   String get address => _client.socket.address.address;
